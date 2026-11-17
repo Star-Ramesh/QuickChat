@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <!-- QuickChat — A temporary private communication platform. Designed & Developed by [STAR RAMESH]. © 2026 [STAR RAMESH]. All rights reserved. -->
+    <meta charset="utf-8" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' https://www.youtube.com https://s.ytimg.com; style-src 'self'; img-src 'self' data: blob: https:; media-src 'self' blob:; frame-src https://www.youtube-nocookie.com https://www.youtube.com; connect-src 'self' https://0.peerjs.com wss://0.peerjs.com https://pipedapi.kavin.rocks https://pipedapi.adminforge.de https://api.piped.private.coffee https://inv.nadeko.net https://invidious.nerdvpn.de; object-src 'none'; base-uri 'self'"
+    />
+    <meta name="author" content="[STAR RAMESH]" />
+    <meta name="copyright" content="© 2026 [STAR RAMESH]" />
+    <meta
+      name="description"
+      content="QuickChat is a temporary private peer-to-peer chat. No accounts, no stored history."
+    />
+    <title>QuickChat</title>
+    <link rel="icon" href="assets/images/logo.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="assets/css/style.css" />
+  </head>
+  <body>
+    <div id="libwarn" class="banner" hidden>
+      The file <b>assets/js/peerjs.min.js</b> is missing. Run
+      <b>install-libs.bat</b> (Windows) or <b>sh install-libs.sh</b>, then
+      reload this page.
+    </div>
+
+    <section id="home" class="view">
+      <header class="bar">
+        <span class="brand"
+          ><img src="assets/images/logo.svg" alt="" width="24" height="24" />
+          QuickChat</span
+        ><button type="button" class="ib theme" aria-label="Switch theme">
+          ◐
+        </button>
+      </header>
+      <main class="hero">
+        <h1>Say it. Then it's gone.</h1>
+        <p class="lead">
+          Create a room, share the link, and chat directly between devices. No
+          accounts and no saved history. When the room closes, everything in it
+          is cleared.
+        </p>
+        <div id="notice" class="notice" role="status"></div>
+        <div class="card">
+          <label for="uname">Your name</label>
+          <input
+            id="uname"
+            maxlength="24"
+            autocomplete="nickname"
+            placeholder="Pick any display name"
+          />
+          <div class="row">
+            <button type="button" id="bCreate" class="btn pri">
+              Create room</button
+            ><button type="button" id="bJoin" class="btn">Join room</button>
+          </div>
+        </div>
+        <p class="about">
+          <b>About.</b> QuickChat connects browsers with WebRTC through a free
+          public PeerJS signaling server. Messages and media stay in RAM only
+          while the room is open. The room lives only while its host stays
+          online, and room rules are enforced by the host's browser, so they
+          cannot be tamper-proof. Designed &amp; developed by
+          <b>[STAR RAMESH]</b>.
+        </p>
+      </main>
+      <footer class="foot">
+        <p>QuickChat — A temporary private communication platform.</p>
+        <p>Designed &amp; Developed by [STAR RAMESH]</p>
+        <p>© 2026 [STAR RAMESH]. All rights reserved.</p>
+      </footer>
+    </section>
+
+    <section id="chat" class="view" hidden>
+      <header class="bar">
+        <button
+          type="button"
+          class="ib sidebtn"
+          id="members"
+          aria-label="Show members"
+        >
+          ☰
+        </button>
+        <button type="button" class="chip" id="cpId" title="Copy Room ID">
+          <span id="roomid">-</span> ⧉
+        </button>
+        <span class="timer" role="timer" aria-label="Room duration" id="timer"
+          >00:00:00</span
+        >
+        <span class="grow"></span>
+        <button
+          type="button"
+          class="ib"
+          id="bMusic"
+          aria-label="Music"
+          title="Music"
+        >
+          🎵
+        </button>
+        <button type="button" class="btn sm" id="cpLink">
+          Copy invite link
+        </button>
+        <button type="button" class="ib theme" aria-label="Switch theme">
+          ◐
+        </button>
+        <button type="button" class="btn sm" id="leave">Leave</button>
+      </header>
+      <div class="body">
+        <aside id="side">
+          <h2>Members <small id="count"></small></h2>
+          <div class="hostonly" hidden>
+            <span>Limit</span
+            ><button
+              type="button"
+              class="btn sm"
+              id="capDn"
+              aria-label="Decrease limit"
+            >
+              −</button
+            ><button
+              type="button"
+              class="btn sm"
+              id="capUp"
+              aria-label="Increase limit"
+            >
+              +
+            </button>
+          </div>
+          <ul id="roster"></ul>
+        </aside>
+        <main class="chatmain">
+          <div id="dropov" hidden>Drop images or videos to share</div>
+          <div id="msgwrap">
+            <p id="empty">
+              The room is ready. Messages and media are temporary and cleared
+              when the room ends.
+            </p>
+            <ol id="messages"></ol>
+          </div>
+          <div id="typing" aria-live="polite"></div>
+          <div id="replybar" hidden>
+            <span id="rtext"></span
+            ><button
+              type="button"
+              class="ib"
+              id="rclear"
+              aria-label="Cancel reply"
+            >
+              ✕
+            </button>
+          </div>
+          <form id="composer" autocomplete="off">
+            <input
+              type="file"
+              id="finput"
+              accept="image/*,video/*"
+              multiple
+              hidden
+            />
+            <button
+              type="button"
+              class="ib"
+              id="bAttach"
+              aria-label="Send image or video"
+              title="Send image or video"
+            >
+              📎
+            </button>
+            <textarea
+              id="input"
+              rows="1"
+              maxlength="2000"
+              placeholder="Write a message"
+              aria-label="Message"
+            ></textarea>
+            <button type="submit" class="btn pri" aria-label="Send">
+              Send
+            </button>
+          </form>
+        </main>
+      </div>
+      <div id="ytBox" aria-hidden="true"><div id="ytPlayer"></div></div>
+    </section>
+
+    <dialog id="dCreate">
+      <form id="fCreate" novalidate>
+        <h2>Create a room</h2>
+        <label for="cName">Your name</label
+        ><input id="cName" maxlength="24" autocomplete="nickname" />
+        <label for="cRoom">Room ID (optional)</label
+        ><input
+          id="cRoom"
+          maxlength="24"
+          autocomplete="off"
+          autocapitalize="characters"
+          spellcheck="false"
+          placeholder="Leave blank for auto ID"
+        />
+        <label for="cMax">Maximum members</label>
+        <select id="cMax">
+          <option value="" selected disabled>Select a limit…</option>
+          <option value="2">2 (one-to-one chat)</option>
+          <option>3</option>
+          <option>4</option>
+          <option>5</option>
+          <option>6</option>
+          <option>7</option>
+          <option>8</option>
+          <option>9</option>
+          <option>10</option>
+          <option>12</option>
+          <option>15</option>
+          <option>20</option>
+        </select>
+        <label for="cPass">Room password (optional)</label
+        ><input
+          id="cPass"
+          type="password"
+          maxlength="64"
+          autocomplete="new-password"
+        />
+        <p class="err" role="alert"></p>
+        <div class="row">
+          <button type="button" class="btn" data-close>Cancel</button
+          ><button type="submit" class="btn pri">Create room</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="dJoin">
+      <form id="fJoin" novalidate>
+        <h2>Join a room</h2>
+        <label for="jRoom">Room ID</label
+        ><input
+          id="jRoom"
+          maxlength="24"
+          autocomplete="off"
+          autocapitalize="characters"
+          spellcheck="false"
+          placeholder="Room ID (e.g. XXXXX-XXXXX)"
+        />
+        <label for="jName">Your name</label
+        ><input id="jName" maxlength="24" autocomplete="nickname" />
+        <label for="jPass">Room password (if any)</label
+        ><input id="jPass" type="password" maxlength="64" autocomplete="off" />
+        <p class="err" role="alert"></p>
+        <div class="row">
+          <button type="button" class="btn" data-close>Cancel</button
+          ><button type="submit" class="btn pri">Join room</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="dMusic">
+      <div class="mdlg">
+        <div class="mdlg-head">
+          <h2>Music</h2>
+          <button type="button" class="ib" data-close aria-label="Close popup">
+            ✕
+          </button>
+        </div>
+        <form id="fMusic" class="mrow" autocomplete="off">
+          <input
+            id="mQuery"
+            maxlength="120"
+            placeholder="Song name or YouTube link"
+            aria-label="Song name or YouTube link"
+          />
+          <button type="submit" class="btn pri sm" id="mSearchBtn">
+            Search
+          </button>
+        </form>
+        <p id="mStat" class="mstat"></p>
+        <ul id="mRes" class="mres"></ul>
+        <p id="mNow" class="mnow">Nothing playing</p>
+        <div class="row">
+          <button type="button" id="mPlay" class="btn pri">Play</button>
+          <button type="button" id="mStop" class="btn">Stop</button>
+        </div>
+        <label class="mperm hostonly" hidden
+          ><input type="checkbox" id="mAll" /> Allow everyone to play/stop
+          music</label
+        >
+      </div>
+    </dialog>
+
+    <div id="toasts"></div>
+    <script src="assets/js/jquery.min.js"></script>
+    <script src="assets/js/peerjs.min.js"></script>
+    <script src="assets/js/app.js"></script>
+  </body>
+</html>
