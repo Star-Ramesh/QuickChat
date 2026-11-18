@@ -799,14 +799,12 @@
   function syncViewport() {
     if (!S.entered) return;
     var vv = w.visualViewport,
-      h = vv ? vv.height : w.innerHeight,
-      top = vv ? vv.offsetTop : 0;
-    $("#chat").css({ top: top + "px", height: h + "px", bottom: "auto" });
+      h = vv ? vv.height : w.innerHeight;
+    $("#chat").css("height", h + "px");
     if (w.scrollY || w.scrollX) w.scrollTo(0, 0);
   }
   function enter() {
     S.entered = true;
-    $("html, body").addClass("in-chat");
     show("chat");
     syncViewport();
     if (w.history && w.history.pushState)
@@ -876,8 +874,7 @@
     clearReply();
     $("#side").removeClass("open");
     $("#sideBack").prop("hidden", true);
-    $("html, body").removeClass("in-chat");
-    $("#chat").css({ top: "", height: "", bottom: "" });
+    $("#chat").css("height", "");
     show("home");
   }
   function fail(msg) {
@@ -1256,11 +1253,6 @@
     if (el) el.focus({ preventScroll: true });
   });
   $("#input")
-    .on("focus", function () {
-      syncViewport();
-      setTimeout(syncViewport, 80);
-      setTimeout(syncViewport, 280);
-    })
     .on("keydown", function (e) {
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
@@ -1361,70 +1353,54 @@
     else startReply($m);
   });
   (function () {
-    var box = d.getElementById("messages"),
-      sx = 0,
+    var sx = 0,
       sy = 0,
       dx = 0,
       lock = "",
-      cur = null,
+      $cur = null,
       vib = false;
-    if (!box) return;
-    box.addEventListener(
-      "touchstart",
-      function (e) {
-        if (e.touches.length !== 1) return;
-        var li = e.target.closest(".msg");
-        if (!li || !$(li).data("t")) return;
-        sx = e.touches[0].clientX;
-        sy = e.touches[0].clientY;
+    $("#messages")
+      .on("touchstart", ".msg", function (e) {
+        var $m = $(this);
+        if (!$m.data("t") || e.originalEvent.touches.length !== 1) return;
+        var t = e.originalEvent.touches[0];
+        sx = t.clientX;
+        sy = t.clientY;
         dx = 0;
         lock = "";
         vib = false;
-        cur = li;
-      },
-      { passive: true },
-    );
-    box.addEventListener(
-      "touchmove",
-      function (e) {
-        if (!cur || e.touches.length !== 1) return;
-        var mx = e.touches[0].clientX - sx,
-          my = e.touches[0].clientY - sy;
+        $cur = $m;
+      })
+      .on("touchmove", ".msg", function (e) {
+        if (!$cur || this !== $cur[0]) return;
+        var t = e.originalEvent.touches[0],
+          mx = t.clientX - sx,
+          my = t.clientY - sy;
         if (!lock) {
-          if (Math.abs(mx) < 8 && Math.abs(my) < 8) return;
-          lock = Math.abs(mx) > Math.abs(my) * 1.1 && mx > 0 ? "h" : "v";
+          if (Math.abs(mx) < 10 && Math.abs(my) < 10) return;
+          lock = Math.abs(mx) > Math.abs(my) * 1.2 && mx > 0 ? "h" : "v";
         }
         if (lock !== "h") return;
         e.preventDefault();
         dx = Math.min(72, Math.max(0, mx));
-        var bub = cur.querySelector(".bub");
-        if (bub) {
-          bub.style.transition = "none";
-          bub.style.transform = "translateX(" + dx + "px)";
-        }
-        if (!vib && dx >= 48) {
+        $cur
+          .find(".bub")
+          .css({ transition: "none", transform: "translateX(" + dx + "px)" });
+        if (!vib && dx >= 52) {
           vib = true;
           try {
             if (navigator.vibrate) navigator.vibrate(10);
           } catch (err) {}
         }
-      },
-      { passive: false },
-    );
-    function endSwipe() {
-      if (!cur) return;
-      var bub = cur.querySelector(".bub");
-      if (bub) {
-        bub.style.transition = "";
-        bub.style.transform = "";
-      }
-      if (lock === "h" && dx >= 48) startReply($(cur));
-      cur = null;
-      lock = "";
-      dx = 0;
-    }
-    box.addEventListener("touchend", endSwipe, { passive: true });
-    box.addEventListener("touchcancel", endSwipe, { passive: true });
+      })
+      .on("touchend touchcancel", ".msg", function () {
+        if (!$cur || this !== $cur[0]) return;
+        $cur.find(".bub").css({ transition: "", transform: "" });
+        if (lock === "h" && dx >= 52) startReply($cur);
+        $cur = null;
+        lock = "";
+        dx = 0;
+      });
   })();
   $("#rclear").on("click", clearReply);
   $("#cpId").on("click", function () {
@@ -1445,36 +1421,12 @@
     e.preventDefault();
     setSide(false);
   });
-  d.addEventListener(
-    "pointerdown",
-    function (e) {
-      if (
-        $("#side").hasClass("open") &&
-        !$(e.target).closest("#side, #members").length
-      )
-        setSide(false);
-    },
-    true,
-  );
-  d.addEventListener(
-    "touchstart",
-    function (e) {
-      if (e.touches && e.touches.length > 1) e.preventDefault();
-    },
-    { passive: false },
-  );
-  d.addEventListener(
-    "touchmove",
-    function (e) {
-      if (e.touches && e.touches.length > 1) e.preventDefault();
-    },
-    { passive: false },
-  );
-  d.addEventListener("gesturestart", function (e) {
-    e.preventDefault();
-  });
-  d.addEventListener("gesturechange", function (e) {
-    e.preventDefault();
+  $(d).on("click", function (e) {
+    if (
+      $("#side").hasClass("open") &&
+      !$(e.target).closest("#side, #members").length
+    )
+      setSide(false);
   });
   function setMax(n) {
     n = Math.min(20, Math.max(S.guests.length + 1, 2, n));
@@ -1536,7 +1488,7 @@
     var msg =
       S.role === "host"
         ? "Close the room for everyone? All messages and media are cleared."
-        : "Leave this room?";
+        : "Leave this room? Once you leave, you cannot see previous messages in the room.";
     if (!w.confirm(msg)) {
       if (w.history && w.history.pushState)
         w.history.pushState({ qcRoom: S.room }, "", w.location.href);
