@@ -180,6 +180,14 @@
   function canMusic() {
     return S.role === "host" || S.music.all;
   }
+  // Shared confirmation text so every exit path stays consistent.
+  function confirmLeave() {
+    var msg =
+      S.role === "host"
+        ? "Close the room for everyone? All messages and media are cleared."
+        : "Leave this room? Once you leave, you cannot see previous messages in the room.";
+    return w.confirm(msg);
+  }
 
   // ---------- rendering (user text is only ever set with .text()) ----------
   function pin() {
@@ -1456,14 +1464,10 @@
     }
     dropGuest(id);
   });
+  // Leave button — confirm for BOTH host and guest (host: close for everyone).
   $("#leave").on("click", function () {
+    if (!confirmLeave()) return;
     if (S.role === "host") {
-      if (
-        !w.confirm(
-          "Close the room for everyone? All messages and media are cleared.",
-        )
-      )
-        return;
       bcast({ t: "closed" });
       setTimeout(function () {
         end("Room closed.");
@@ -1476,20 +1480,22 @@
     $(w.visualViewport).on("resize scroll", syncViewport);
   }
   $(w).on("resize", syncViewport);
+  // Reload / close tab / navigate away — native browser confirm.
+  // NOTE: beforeunload does NOT fire on minimise, tab switch, or screen lock,
+  // so the user stays in the room silently in those cases.
   $(w).on("beforeunload", function (e) {
-    if (S.entered) {
-      e.preventDefault();
-      e.returnValue = "";
-      return "";
-    }
-  });
-  $(w).on("popstate", function () {
     if (!S.entered) return;
-    var msg =
+    e.preventDefault();
+    e.returnValue =
       S.role === "host"
         ? "Close the room for everyone? All messages and media are cleared."
-        : "Leave this room? Once you leave, you cannot see previous messages in the room.";
-    if (!w.confirm(msg)) {
+        : "Leave this room? Once you leave, you cannot see previous messages.";
+    return e.returnValue;
+  });
+  // Back / forward button — beforeunload does NOT fire here.
+  $(w).on("popstate", function () {
+    if (!S.entered) return;
+    if (!confirmLeave()) {
       if (w.history && w.history.pushState)
         w.history.pushState({ qcRoom: S.room }, "", w.location.href);
       return;
@@ -1497,6 +1503,7 @@
     if (S.role === "host") bcast({ t: "closed" });
     end(S.role === "host" ? "Room closed." : "You left the room.");
   });
+  // Silent cleanup only after the user has already approved leaving.
   $(w).on("pagehide", function () {
     if (S.entered) {
       if (S.role === "host") bcast({ t: "closed" });
