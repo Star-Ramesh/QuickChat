@@ -20,4 +20,4 @@ Commit everything (including `assets/js/peerjs.min.js`), then Settings → Pages
 - The room exists only while the host is online. If the host disconnects, the room ends (no host failover yet).
 - Some networks (symmetric NAT, strict mobile or corporate) need a TURN relay, which needs a server. Those users will see a connection error.
 - Room rules and the password are checked by the host's browser; this is not tamper-proof. Chat is encrypted per link by WebRTC, but the host relays and can read it.
-- Not included in this version: file sharing, music player, admin promotion and ownership transfer.
+- Included in this version: text chat, RAM-only image/video sharing, and synced YouTube music playback. Not included: admin promotion and ownership transfer.

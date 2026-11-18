@@ -6,11 +6,11 @@
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1, viewport-fit=cover"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
     />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' https://www.youtube.com https://s.ytimg.com; style-src 'self'; img-src 'self' data: blob: https:; media-src 'self' blob:; frame-src https://www.youtube-nocookie.com https://www.youtube.com; connect-src 'self' https://0.peerjs.com wss://0.peerjs.com https://pipedapi.kavin.rocks https://pipedapi.adminforge.de https://api.piped.private.coffee https://inv.nadeko.net https://invidious.nerdvpn.de; object-src 'none'; base-uri 'self'"
+      content="default-src 'self'; script-src 'self' 'sha256-vvt4KWwuNr51XfE5m+hzeNEGhiOfZzG97ccfqGsPwvE=' https://www.youtube.com https://s.ytimg.com; style-src 'self'; img-src 'self' data: blob: https:; media-src 'self' blob:; frame-src https://www.youtube-nocookie.com https://www.youtube.com; connect-src 'self' https://0.peerjs.com wss://0.peerjs.com https://pipedapi.kavin.rocks https://pipedapi.adminforge.de https://api.piped.private.coffee https://inv.nadeko.net https://invidious.nerdvpn.de; object-src 'none'; base-uri 'self'"
     />
     <meta name="author" content="[STAR RAMESH]" />
     <meta name="copyright" content="© 2026 [STAR RAMESH]" />
@@ -34,9 +34,7 @@
         <span class="brand"
           ><img src="assets/images/logo.svg" alt="" width="24" height="24" />
           QuickChat</span
-        ><button type="button" class="ib theme" aria-label="Switch theme">
-          ◐
-        </button>
+        >
       </header>
       <main class="hero">
         <h1>Say it. Then it's gone.</h1>
@@ -100,14 +98,24 @@
           aria-label="Music"
           title="Music"
         >
-          🎵
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="35"
+            height="35"
+            fill="currentColor"
+            class="bi bi-apple-music"
+            viewBox="0 0 16 16"
+          >
+            <path
+              fill-rule="evenodd"
+              d="m10.995 0 .573.001q.241 0 .483.007c.35.01.705.03 1.051.093.352.063.68.166.999.329a3.36 3.36 0 0 1 1.47 1.468c.162.32.265.648.328 1 .063.347.084.7.093 1.051q.007.241.007.483l.001.573v5.99l-.001.573q0 .241-.008.483c-.01.35-.03.704-.092 1.05a3.5 3.5 0 0 1-.33 1 3.36 3.36 0 0 1-1.468 1.468 3.5 3.5 0 0 1-1 .33 7 7 0 0 1-1.05.092q-.241.007-.483.008l-.573.001h-5.99l-.573-.001q-.241 0-.483-.008a7 7 0 0 1-1.052-.092 3.6 3.6 0 0 1-.998-.33 3.36 3.36 0 0 1-1.47-1.468 3.6 3.6 0 0 1-.328-1 7 7 0 0 1-.093-1.05Q.002 11.81 0 11.568V5.005l.001-.573q0-.241.007-.483c.01-.35.03-.704.093-1.05a3.6 3.6 0 0 1 .329-1A3.36 3.36 0 0 1 1.9.431 3.5 3.5 0 0 1 2.896.1 7 7 0 0 1 3.95.008Q4.19.002 4.432 0h.573zm-.107 2.518-4.756.959H6.13a.66.66 0 0 0-.296.133.5.5 0 0 0-.16.31c-.004.027-.01.08-.01.16v5.952c0 .14-.012.275-.106.39-.095.115-.21.15-.347.177l-.31.063c-.393.08-.65.133-.881.223a1.4 1.4 0 0 0-.519.333 1.25 1.25 0 0 0-.332.995c.031.297.166.582.395.792.156.142.35.25.578.296.236.047.49.031.858-.043.196-.04.38-.102.555-.205a1.4 1.4 0 0 0 .438-.405 1.5 1.5 0 0 0 .233-.55c.042-.202.052-.386.052-.588V6.347c0-.276.08-.35.302-.404.024-.005 3.954-.797 4.138-.833.257-.049.378.025.378.294v3.524c0 .14-.001.28-.096.396-.094.115-.211.15-.348.178l-.31.062c-.393.08-.649.133-.88.223a1.4 1.4 0 0 0-.52.334 1.26 1.26 0 0 0-.34.994c.03.297.174.582.404.792a1.2 1.2 0 0 0 .577.294c.237.048.49.03.858-.044.197-.04.381-.098.556-.202a1.4 1.4 0 0 0 .438-.405q.173-.252.233-.549a2.7 2.7 0 0 0 .044-.589V2.865c0-.273-.143-.443-.4-.42-.04.003-.383.064-.424.073"
+            />
+          </svg>
         </button>
-        <button type="button" class="btn sm" id="cpLink">
-          Copy invite link
+        <button type="button" class="btn sm" id="cpLink" title="Copy invite link">
+          <span class="hide-sm">Copy invite link</span><span class="show-sm">Invite</span>
         </button>
-        <button type="button" class="ib theme" aria-label="Switch theme">
-          ◐
-        </button>
+        
         <button type="button" class="btn sm" id="leave">Leave</button>
       </header>
       <div class="body">
@@ -133,6 +141,7 @@
           </div>
           <ul id="roster"></ul>
         </aside>
+        <div id="sideBack" hidden></div>
         <main class="chatmain">
           <div id="dropov" hidden>Drop images or videos to share</div>
           <div id="msgwrap">
@@ -169,7 +178,18 @@
               aria-label="Send image or video"
               title="Send image or video"
             >
-              📎
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="25"
+                height="25"
+                fill="currentColor"
+                class="bi bi-paperclip"
+                viewBox="0 0 16 16"
+              >
+                <path
+                  d="M4.5 3a2.5 2.5 0 0 1 5 0v9a1.5 1.5 0 0 1-3 0V5a.5.5 0 0 1 1 0v7a.5.5 0 0 0 1 0V3a1.5 1.5 0 1 0-3 0v9a2.5 2.5 0 0 0 5 0V5a.5.5 0 0 1 1 0v7a3.5 3.5 0 1 1-7 0z"
+                />
+              </svg>
             </button>
             <textarea
               id="input"
@@ -179,7 +199,23 @@
               aria-label="Message"
             ></textarea>
             <button type="submit" class="btn pri" aria-label="Send">
-              Send
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                fill="currentColor"
+                class="bi bi-send-arrow-up-fill"
+                viewBox="0 0 16 16"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M15.854.146a.5.5 0 0 1 .11.54L13.026 8.03A4.5 4.5 0 0 0 8 12.5c0 .5 0 1.5-.773.36l-1.59-2.498L.644 7.184l-.002-.001-.41-.261a.5.5 0 0 1 .083-.886l.452-.18.001-.001L15.314.035a.5.5 0 0 1 .54.111M6.637 10.07l7.494-7.494.471-1.178-1.178.471L5.93 9.363l.338.215a.5.5 0 0 1 .154.154z"
+                />
+                <path
+                  fill-rule="evenodd"
+                  d="M12.5 16a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7m.354-5.354a.5.5 0 0 0-.722.016l-1.149 1.25a.5.5 0 1 0 .737.676l.28-.305V14a.5.5 0 0 0 1 0v-1.793l.396.397a.5.5 0 0 0 .708-.708z"
+                />
+              </svg>
             </button>
           </form>
         </main>

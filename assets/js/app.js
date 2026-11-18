@@ -796,9 +796,19 @@
   }
 
   // ---------- lifecycle & RAM cleanup ----------
+  function syncViewport() {
+    if (!S.entered) return;
+    var vv = w.visualViewport,
+      h = vv ? vv.height : w.innerHeight;
+    $("#chat").css("height", h + "px");
+    if (w.scrollY || w.scrollX) w.scrollTo(0, 0);
+  }
   function enter() {
     S.entered = true;
     show("chat");
+    syncViewport();
+    if (w.history && w.history.pushState)
+      w.history.pushState({ qcRoom: S.room }, "", w.location.href);
     $("#roomid").text(fmt(S.room));
     $(".hostonly").prop("hidden", S.role !== "host");
     $("#leave").text(S.role === "host" ? "Close room" : "Leave");
@@ -863,6 +873,8 @@
     $("#finput").val("");
     clearReply();
     $("#side").removeClass("open");
+    $("#sideBack").prop("hidden", true);
+    $("#chat").css("height", "");
     show("home");
   }
   function fail(msg) {
@@ -1160,28 +1172,6 @@
   }
 
   // ---------- UI events ----------
-  var th;
-  try {
-    th = localStorage.getItem("qc.theme");
-  } catch (e) {
-    /* storage blocked */
-  }
-  d.documentElement.setAttribute(
-    "data-theme",
-    th === "light" ? "light" : "dark",
-  );
-  $(".theme").on("click", function () {
-    var n =
-      d.documentElement.getAttribute("data-theme") === "dark"
-        ? "light"
-        : "dark";
-    d.documentElement.setAttribute("data-theme", n);
-    try {
-      localStorage.setItem("qc.theme", n);
-    } catch (e) {
-      /* storage blocked */
-    }
-  });
   if (typeof Peer === "undefined" || !w.RTCPeerConnection) {
     $("#libwarn").prop("hidden", false);
     $("#bCreate,#bJoin").prop("disabled", true);
@@ -1239,11 +1229,18 @@
     busy(true);
     joinRoom(room, name, $("#jPass").val().slice(0, 64));
   });
+  $('#composer button[type="submit"]').on("mousedown", function (e) {
+    e.preventDefault();
+  });
   $("#composer").on("submit", function (e) {
     e.preventDefault();
     var $i = $("#input"),
+      el = $i[0],
       text = $i.val().trim();
-    if (!text || !S.me) return;
+    if (!text || !S.me) {
+      if (el) el.focus({ preventScroll: true });
+      return;
+    }
     var m = {
       id: rid(16),
       text: text.slice(0, 2000),
@@ -1253,6 +1250,7 @@
     else send(S.conn, { t: "msg", id: m.id, text: m.text, re: m.re });
     $i.val("");
     clearReply();
+    if (el) el.focus({ preventScroll: true });
   });
   $("#input")
     .on("keydown", function (e) {
@@ -1338,30 +1336,72 @@
   $("#mAll").on("change", function () {
     if (S.role === "host") hostMusic({ act: "perm", all: this.checked });
   });
-  $("#mUnlock").on("click", function () {
-    if (ytPlayer) {
-      try {
-        ytPlayer.unMute();
-        ytPlayer.playVideo();
-      } catch (e) {
-        /* ignore */
-      }
-    }
-    $(this).prop("hidden", true);
-  });
+  function startReply($m) {
+    var n = $m.data("n"),
+      t = $m.data("t");
+    if (!t) return;
+    S.reply = { n: n, t: t };
+    $("#rtext").text("Replying to " + n + ": " + String(t).slice(0, 60));
+    $("#replybar").prop("hidden", false);
+    var el = d.getElementById("input");
+    if (el) el.focus({ preventScroll: true });
+  }
   $("#messages").on("click", "button[data-a]", function () {
     var $m = $(this).closest(".msg"),
       a = $(this).data("a");
     if (a === "copy") copy($m.data("t"));
-    else {
-      S.reply = { n: $m.data("n"), t: $m.data("t") };
-      $("#rtext").text(
-        "Replying to " + S.reply.n + ": " + S.reply.t.slice(0, 60),
-      );
-      $("#replybar").prop("hidden", false);
-      $("#input").trigger("focus");
-    }
+    else startReply($m);
   });
+  (function () {
+    var sx = 0,
+      sy = 0,
+      dx = 0,
+      lock = "",
+      $cur = null,
+      vib = false;
+    $("#messages")
+      .on("touchstart", ".msg", function (e) {
+        var $m = $(this);
+        if (!$m.data("t") || e.originalEvent.touches.length !== 1) return;
+        var t = e.originalEvent.touches[0];
+        sx = t.clientX;
+        sy = t.clientY;
+        dx = 0;
+        lock = "";
+        vib = false;
+        $cur = $m;
+      })
+      .on("touchmove", ".msg", function (e) {
+        if (!$cur || this !== $cur[0]) return;
+        var t = e.originalEvent.touches[0],
+          mx = t.clientX - sx,
+          my = t.clientY - sy;
+        if (!lock) {
+          if (Math.abs(mx) < 10 && Math.abs(my) < 10) return;
+          lock = Math.abs(mx) > Math.abs(my) * 1.2 && mx > 0 ? "h" : "v";
+        }
+        if (lock !== "h") return;
+        e.preventDefault();
+        dx = Math.min(72, Math.max(0, mx));
+        $cur
+          .find(".bub")
+          .css({ transition: "none", transform: "translateX(" + dx + "px)" });
+        if (!vib && dx >= 52) {
+          vib = true;
+          try {
+            if (navigator.vibrate) navigator.vibrate(10);
+          } catch (err) {}
+        }
+      })
+      .on("touchend touchcancel", ".msg", function () {
+        if (!$cur || this !== $cur[0]) return;
+        $cur.find(".bub").css({ transition: "", transform: "" });
+        if (lock === "h" && dx >= 52) startReply($cur);
+        $cur = null;
+        lock = "";
+        dx = 0;
+      });
+  })();
   $("#rclear").on("click", clearReply);
   $("#cpId").on("click", function () {
     copy(S.room);
@@ -1369,8 +1409,24 @@
   $("#cpLink").on("click", function () {
     copy(w.location.href.split("#")[0] + "#join=" + encodeURIComponent(S.room));
   });
-  $("#members").on("click", function () {
-    $("#side").toggleClass("open");
+  function setSide(open) {
+    $("#side").toggleClass("open", open);
+    $("#sideBack").prop("hidden", !open);
+  }
+  $("#members").on("click", function (e) {
+    e.stopPropagation();
+    setSide(!$("#side").hasClass("open"));
+  });
+  $("#sideBack").on("click touchstart", function (e) {
+    e.preventDefault();
+    setSide(false);
+  });
+  $(d).on("click", function (e) {
+    if (
+      $("#side").hasClass("open") &&
+      !$(e.target).closest("#side, #members").length
+    )
+      setSide(false);
   });
   function setMax(n) {
     n = Math.min(20, Math.max(S.guests.length + 1, 2, n));
@@ -1415,6 +1471,31 @@
     } else {
       end("You left the room.");
     }
+  });
+  if (w.visualViewport) {
+    $(w.visualViewport).on("resize scroll", syncViewport);
+  }
+  $(w).on("resize", syncViewport);
+  $(w).on("beforeunload", function (e) {
+    if (S.entered) {
+      e.preventDefault();
+      e.returnValue = "";
+      return "";
+    }
+  });
+  $(w).on("popstate", function () {
+    if (!S.entered) return;
+    var msg =
+      S.role === "host"
+        ? "Close the room for everyone? All messages and media are cleared."
+        : "Leave this room?";
+    if (!w.confirm(msg)) {
+      if (w.history && w.history.pushState)
+        w.history.pushState({ qcRoom: S.room }, "", w.location.href);
+      return;
+    }
+    if (S.role === "host") bcast({ t: "closed" });
+    end(S.role === "host" ? "Room closed." : "You left the room.");
   });
   $(w).on("pagehide", function () {
     if (S.entered) {
